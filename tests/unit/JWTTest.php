@@ -52,12 +52,27 @@ class JWTTest extends TestCase
     }
 
     /**
+     * @param array $headers
+     * @param array $payload
+     * @param string $expectedToken
+     * @dataProvider tokenDataProvider
+     */
+    public function testEncode(string $expectedToken, array $headers, array $payload, string $secret): void
+    {
+        $jwt = new JWT();
+
+        $actualToken = $jwt->encode($headers, $payload, $secret);
+
+        $this->assertEquals($expectedToken, $actualToken);
+    }
+
+    /**
      * @dataProvider signatureDataProvider
      */
     public function testVerifyTokenSignature(string $secret, bool $expected): void
     {
         $jwt = new JWT();
-        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.5mhBHqs5_DTLdINd9p5m7ZJ6XD0Xc55kIaCRY5r6HRA';
+        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.kK9JnTXZwzNo3BYNXJT57PGLnQk-Xyu7IBhRWFmc4C0';
         $actual = $jwt->verify($token, $secret);
 
         $this->assertEquals($expected, $actual);
@@ -69,9 +84,7 @@ class JWTTest extends TestCase
     public function tokenDataProvider(): Generator
     {
         yield [
-            'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
-                        eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.
-                        SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+            'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
             'headers' => [
                 'alg' => 'HS256',
                 'typ' => 'JWT'
@@ -80,7 +93,8 @@ class JWTTest extends TestCase
                 'sub' => '1234567890',
                 'name' => 'John Doe',
                 'iat' => 1516239022
-            ]
+            ],
+            'secret' => 'your-256-bit-secret'
         ];
         yield [
             'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NjYiLCJuYW1lIjoiSm9zZSBQb3BlIiwibmlja25hbWUiOiJQYXBhIn0.aFyJqWf-7R1uxnVvkGiu5s3TL7QSyQB19gdygmY4Bu8',
@@ -92,14 +106,28 @@ class JWTTest extends TestCase
                 'sub' => '666',
                 'name' => 'Jose Pope',
                 'nickname' => 'Papa'
-            ]
+            ],
+            'secret' => 'your-256-bit-secret'
+        ];
+        yield [
+            'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.U3TsHpifbXHt3KaI8C40WLEajpCF5N6YxYOz_w3JOwM',
+            'headers' => [
+                'alg' => 'HS256',
+                'typ' => 'JWT'
+            ],
+            'payload' => [
+                'sub' => '1234567890',
+                'name' => 'Test',
+                'iat' => 1516239022
+            ],
+            'secret' => 'arkangdynian'
         ];
     }
 
     public function signatureDataProvider()
     {
         yield [
-            'secret' => 'test',
+            'secret' => 'secret-key',
             'expected' => true
         ];
         yield [

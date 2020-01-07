@@ -25,15 +25,44 @@ class JWT
     }
 
     /**
+     * @param array $header
+     * @param array $payload
+     * @param string $secret
+     * @return string
+     */
+    public function encode(array $header, array $payload, string $secret): string
+    {
+
+        $headerEncoded = Base64Url::encode(json_encode($header));
+        $payloadEncoded = Base64Url::encode(json_encode($payload));
+
+        $signatureEncoded = Base64Url::encode($this->sign($headerEncoded, $payloadEncoded, Algorithms::TYPES[$header['alg']], $secret));
+
+        return implode('.', [$headerEncoded, $payloadEncoded, $signatureEncoded]);
+    }
+
+    /**
+     * @param string $headerEncoded
+     * @param string $payloadEncoded
+     * @param string $algorithm
+     * @param string $secret
+     * @return string
+     */
+    private function sign(string $headerEncoded, string $payloadEncoded, string $algorithm, string $secret): string
+    {
+        return hash_hmac($algorithm, implode('.', [$headerEncoded, $payloadEncoded]), $secret, true);
+    }
+
+    /**
      * @param string $token
      * @param string $secret
      * @return bool
      */
     public function verify(string $token, string $secret): bool
     {
-        [$headersEncoded, $payloadEncoded, $signatureEncoded] = explode('.', $token);
-        $headers = json_decode(Base64Url::decode($headersEncoded), true, 512, JSON_THROW_ON_ERROR);
-        $hashedValue = hash_hmac(Algorithms::TYPES[$headers['alg']], $headersEncoded . '.' . $payloadEncoded, $secret, true);
+        [$headerEncoded, $payloadEncoded, $signatureEncoded] = explode('.', $token);
+        $headers = json_decode(Base64Url::decode($headerEncoded), true, 512, JSON_THROW_ON_ERROR);
+        $hashedValue = hash_hmac(Algorithms::TYPES[$headers['alg']], implode('.', [$headerEncoded, $payloadEncoded]), $secret, true);
 
         return Base64Url::encode($hashedValue) === $signatureEncoded;
     }

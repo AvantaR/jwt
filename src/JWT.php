@@ -7,21 +7,11 @@ class JWT
 {
     /**
      * @param string $token
-     * @return JWTEncoded
-     * @throws JWTException
+     * @return TokenDecoded
      */
-    public function decode(string $token): JWTEncoded
+    public function decode(string $token): TokenDecoded
     {
-        [$headers, $payload, $signature] = explode('.', $token);
-
-        $headers = json_decode(Base64Url::decode($headers), true, 512, JSON_THROW_ON_ERROR);
-        $payload = json_decode(Base64Url::decode($payload), true, 512, JSON_THROW_ON_ERROR);
-
-        if (!is_array($headers) || !is_array($payload)) {
-            throw new JWTException('Invalid JWT Token');
-        }
-
-        return new JWTEncoded($headers, $payload);
+        return new TokenDecoded($token);
     }
 
     /**
@@ -36,7 +26,8 @@ class JWT
         $headerEncoded = Base64Url::encode(json_encode($header));
         $payloadEncoded = Base64Url::encode(json_encode($payload));
 
-        $signatureEncoded = Base64Url::encode($this->sign($headerEncoded, $payloadEncoded, Algorithms::TYPES[$header['alg']], $secret));
+        $signatureEncoded = Base64Url::encode($this->sign($headerEncoded, $payloadEncoded,
+            Algorithms::TYPES[$header['alg']], $secret));
 
         return implode('.', [$headerEncoded, $payloadEncoded, $signatureEncoded]);
     }
@@ -62,7 +53,8 @@ class JWT
     {
         [$headerEncoded, $payloadEncoded, $signatureEncoded] = explode('.', $token);
         $headers = json_decode(Base64Url::decode($headerEncoded), true, 512, JSON_THROW_ON_ERROR);
-        $hashedValue = hash_hmac(Algorithms::TYPES[$headers['alg']], implode('.', [$headerEncoded, $payloadEncoded]), $secret, true);
+        $hashedValue = hash_hmac(Algorithms::TYPES[$headers['alg']], implode('.', [$headerEncoded, $payloadEncoded]),
+            $secret, true);
 
         return Base64Url::encode($hashedValue) === $signatureEncoded;
     }

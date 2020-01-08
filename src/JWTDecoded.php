@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace JWT;
 
-class JWTEncoded
+class JWTDecoded
 {
     private $headers;
     private $payload;

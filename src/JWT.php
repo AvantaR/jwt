@@ -22,7 +22,6 @@ class JWT
      */
     public function encode(array $header, array $payload, string $secret): string
     {
-
         $headerEncoded = Base64Url::encode(json_encode($header));
         $payloadEncoded = Base64Url::encode(json_encode($payload));
 
